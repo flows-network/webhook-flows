@@ -1,0 +1,21 @@
+[package]
+name = "webhook-flows"
+version = "0.1.0"
+edition = "2021"
+license = "MIT/Apache-2.0"
+description = "Webhook integration for flows.network"
+documentation = "https://docs.rs/webhook-flows"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["lib", "cdylib"]
+
+[package.metadata.docs.rs]
+default-target = "wasm32-wasi"
+
+[dependencies]
+http_req_wasi = "0.11"
+lazy_static = "1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+urlencoding = "2"
