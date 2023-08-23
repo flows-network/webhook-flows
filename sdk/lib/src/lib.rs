@@ -74,10 +74,11 @@ pub async fn request_received() {
         let mut writer = Vec::new();
         let res = request::get(
             format!(
-                "{}/{}/{}/listen",
+                "{}/{}/{}/listen?handler_fn={}",
                 WEBHOOK_API_PREFIX.as_str(),
                 flows_user,
-                flow_id
+                flow_id,
+                "__webhook__on_request_received"
             ),
             &mut writer,
         )

@@ -4,6 +4,7 @@ export default async function cc(req: any, res: any) {
     const {
         flows_user: flowsUser,
         flow_id: flowId,
+        handler_fn: handlerFn,
     } = req.query;
   
     if (!flowsUser || !flowId) {
@@ -15,14 +16,20 @@ export default async function cc(req: any, res: any) {
         let row = keymap.rows[0];
 
         if (row) {
+            if (!row.handler_fn && handlerFn) {
+                await pool.query(`
+                    UPDATE webhook_keymap set handler_fn = $1
+                    WHERE l_key = $2 `,
+                [handlerFn, row.l_key]);
+            }
             return res.json(row);
         }
 
         let lKey = makeKey(20);
         await pool.query(`
-            INSERT INTO webhook_keymap (flows_user, flow_id, l_key)
-            VALUES ($1, $2, $3)
-          `, [flowsUser, flowId, lKey]);
+            INSERT INTO webhook_keymap (flows_user, flow_id, handler_fn, l_key)
+            VALUES ($1, $2, $3, $4)
+          `, [flowsUser, flowId, handlerFn, lKey]);
 
 
         let r = {

@@ -10,7 +10,7 @@ export default async function cc(req: any, res: any) {
     }
   
     try {
-        let keymap = await pool.query("SELECT flows_user, flow_id, '__webhook__on_request_received' as handler_fn FROM webhook_keymap where l_key = $1", [lKey]);
+        let keymap = await pool.query("SELECT flows_user, flow_id, handler_fn FROM webhook_keymap where l_key = $1", [lKey]);
         let row = keymap.rows[0];
 
         if (row) {
