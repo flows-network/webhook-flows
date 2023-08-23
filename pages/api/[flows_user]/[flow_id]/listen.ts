@@ -16,7 +16,7 @@ export default async function cc(req: any, res: any) {
         let row = keymap.rows[0];
 
         if (row) {
-            if (!row.handler_fn && handlerFn) {
+            if (row.handler_fn !== handlerFn) {
                 await pool.query(`
                     UPDATE webhook_keymap set handler_fn = $1
                     WHERE l_key = $2 `,
