@@ -5,14 +5,15 @@
 //! To get started, let's write a very tiny flow function.
 //!
 //! ```rust
-//! use webhook_flows::{request_received, send_response};
+//! use webhook_flows::{request_received, request_handler, send_response};
 //!
 //! #[no_mangle]
 //! #[tokio::main(flavor = "current_thread")]
-//! pub async fn run() {
-//!     request_received(handler).await;
+//! pub async fn on_deploy() {
+//!     request_received().await;
 //! }
 //!
+//! #[request_handler]
 //! async fn handler(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
 //!     send_response(
 //!         200,
@@ -22,7 +23,7 @@
 //! }
 //! ```
 //!
-//! When a new request is received the callback closure of function [request_received()] will be called and [send_response()] is used to make the response.
+//! When a new request is received the function `handler` decorated by macro [request_handler] will be called and [send_response()] is used to make the response.
 
 use http_req::request;
 use lazy_static::lazy_static;
