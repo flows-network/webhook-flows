@@ -20,6 +20,6 @@ async fn handler(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 }
 ```
 
-When a request is received, the fn `handler` decorated by macro [`request_handler`](https://docs.rs/webhook-flows/latest/webhook_flows/fn.request_handler.html) will be called. We get the headers, query and body then set the status, headers and body of the response using [`send_response`](https://docs.rs/webhook-flows/latest/webhook_flows/fn.send_response.html).
+When a request is received, the fn `handler` decorated by macro [`request_handler`](https://docs.rs/webhook-flows/latest/webhook_flows/attr.request_handler.html) will be called. We get the headers, query and body then set the status, headers and body of the response using [`send_response`](https://docs.rs/webhook-flows/latest/webhook_flows/fn.send_response.html).
 
 The whole document is [here](https://docs.rs/webhook-flows).
