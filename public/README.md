@@ -2,12 +2,12 @@ This is an integration for making your flow function triggerable from webhooks i
 
 ## Usage example
 ```rust
-use webhook_flows::{request_received, request_handler, send_response};
+use webhook_flows::{create_endpoint, request_handler, send_response};
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]
 pub async fn on_deploy() {
-    request_received().await;
+    create_endpoint().await;
 }
 
 #[request_handler]
