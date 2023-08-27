@@ -5,12 +5,12 @@
 //! To get started, let's write a very tiny flow function.
 //!
 //! ```rust
-//! use webhook_flows::{request_received, request_handler, send_response};
+//! use webhook_flows::{create_endpoint, request_handler, send_response};
 //!
 //! #[no_mangle]
 //! #[tokio::main(flavor = "current_thread")]
 //! pub async fn on_deploy() {
-//!     request_received().await;
+//!     create_endpoint().await;
 //! }
 //!
 //! #[request_handler]
@@ -56,7 +56,7 @@ extern "C" {
 /// then the query will look like `HashMap("param", Value::String("hello"))`
 ///
 /// The body is the raw bytes of the request body.
-pub async fn request_received() {
+pub async fn create_endpoint() {
     unsafe {
         let mut flows_user = Vec::<u8>::with_capacity(100);
         let c = get_flows_user(flows_user.as_mut_ptr());
