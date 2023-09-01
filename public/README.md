@@ -11,7 +11,7 @@ pub async fn on_deploy() {
 }
 
 #[request_handler]
-async fn handler(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
+async fn handler(_headers: Vec<(String, String)>, _subpath: String, _qry: HashMap<String, Value>, _body: Vec<u8>) {
     send_response(
         200,
         vec![(String::from("content-type"), String::from("text/html"))],
