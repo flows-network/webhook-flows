@@ -13,12 +13,14 @@ pub fn request_handler(_: TokenStream, item: TokenStream) -> TokenStream {
                 pub fn get_event_headers(p: *mut u8) -> i32;
                 pub fn get_event_query_length() -> i32;
                 pub fn get_event_query(p: *mut u8) -> i32;
+                pub fn get_event_subpath_length() -> i32;
+                pub fn get_event_subpath(p: *mut u8) -> i32;
                 pub fn get_event_body_length() -> i32;
                 pub fn get_event_body(p: *mut u8) -> i32;
             }
         }
 
-        fn __request() -> Option<(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>)> {
+        fn __request() -> Option<(Vec<(String, String)>, String, HashMap<String, Value>, Vec<u8>)> {
             unsafe {
                 let l = webhook_flows_macros::get_event_headers_length();
                 let mut event_headers = Vec::<u8>::with_capacity(l as usize);
@@ -34,21 +36,28 @@ pub fn request_handler(_: TokenStream, item: TokenStream) -> TokenStream {
                 event_query.set_len(c as usize);
                 let event_query = serde_json::from_slice(&event_query).unwrap();
 
+                let l = webhook_flows_macros::get_event_subpath_length();
+                let mut event_subpath = Vec::<u8>::with_capacity(l as usize);
+                let c = webhook_flows_macros::get_event_subpath(event_subpath.as_mut_ptr());
+                assert!(c == l);
+                event_subpath.set_len(c as usize);
+                let event_subpath = String::from_utf8_lossy(&event_subpath).into_owned();
+
                 let l = webhook_flows_macros::get_event_body_length();
                 let mut event_body = Vec::<u8>::with_capacity(l as usize);
                 let c = webhook_flows_macros::get_event_body(event_body.as_mut_ptr());
                 assert!(c == l);
                 event_body.set_len(c as usize);
 
-                Some((event_headers, event_query, event_body))
+                Some((event_headers, event_subpath, event_query, event_body))
             }
         }
 
         #[no_mangle]
         #[tokio::main(flavor = "current_thread")]
         pub async fn __webhook__on_request_received() {
-            if let Some((headers, qry, body)) = __request() {
-                #func_ident(headers, qry, body).await;
+            if let Some((headers, subpath, qry, body)) = __request() {
+                #func_ident(headers, subpath, qry, body).await;
             }
         }
     };
