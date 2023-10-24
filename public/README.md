@@ -20,6 +20,22 @@ async fn handler(_headers: Vec<(String, String)>, _subpath: String, _qry: HashMa
 }
 ```
 
-When a request is received, the fn `handler` decorated by macro [`request_handler`](https://docs.rs/webhook-flows/latest/webhook_flows/attr.request_handler.html) will be called. We get the headers, query and body then set the status, headers and body of the response using [`send_response`](https://docs.rs/webhook-flows/latest/webhook_flows/fn.send_response.html).
+When a request is received, the fn `handler` decorated by macro [`request_handler`](https://docs.rs/webhook-flows/latest/webhook_flows/attr.request_handler.html) will be called. We get the headers, subpath, query and body then set the status, headers and body of the response using [`send_response`](https://docs.rs/webhook-flows/latest/webhook_flows/fn.send_response.html).
+
+You can set method as arguments of `request_handler` to specify which
+http method to reponse:
+```rust
+#[request_handler(GET, POST)]
+async fn handler(_headers: Vec<(String, String)>, _subpath: String, _qry: HashMap<String, Value>, _body: Vec<u8>) {
+    send_response(
+        200,
+        vec![(String::from("content-type"), String::from("text/html"))],
+        "ok".as_bytes().to_vec(),
+    );
+}
+```
+In this case, request with methods other than GET and POST will receive
+METHOD_NOT_ALLOWED response. If no method has been speicified, all methods
+will be handled.
 
 The whole document is [here](https://docs.rs/webhook-flows).
