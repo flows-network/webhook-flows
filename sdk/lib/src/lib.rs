@@ -31,6 +31,10 @@ use serde_json::Value;
 
 pub use webhook_flows_macros::*;
 
+pub use http::Method;
+
+pub mod route;
+
 lazy_static! {
     static ref WEBHOOK_API_PREFIX: String = String::from(
         std::option_env!("WEBHOOK_API_PREFIX").unwrap_or("https://webhook.flows.network/api")
@@ -46,7 +50,6 @@ extern "C" {
     fn set_response(p: *const u8, len: i32);
     fn set_response_headers(p: *const u8, len: i32);
     fn set_response_status(status: i32);
-    // fn redirect_to(p: *const u8, len: i32);
 }
 
 /// Register a callback closure with the query and body of the request for the webhook service.
