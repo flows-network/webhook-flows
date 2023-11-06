@@ -38,4 +38,60 @@ In this case, request with methods other than GET and POST will receive
 METHOD_NOT_ALLOWED response. If no method has been speicified, all methods
 will be handled.
 
+There is a [`route`](https://docs.rs/webhook-flows/latest/webhook_flows/route/index.html) module for routing paths to different handler functions.
+```rust
+use webhook_flows::{
+    create_endpoint, request_handler,
+    route::{wrap_handler, route, RouteError, Router},
+    send_response, Method,
+};
+
+#[request_handler]
+async fn handler() {
+    let mut router = Router::new();
+    router
+        .insert("/options", (vec![Method::OPTIONS], wrap_handler(options)))
+        .unwrap();
+
+    router
+        .insert(
+            "/query/:city",
+            (vec![Method::GET, Method::POST], wrap_handler(query)),
+        )
+        .unwrap();
+
+    if let Err(e) = route(router).await {
+        match e {
+            RouteError::NotFound => {
+                send_response(404, vec![], b"No route matched".to_vec());
+            }
+            RouteError::MethodNotAllowed => {
+                send_response(405, vec![], b"Method not allowed".to_vec());
+            }
+        }
+    }
+}
+
+async fn options(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    // send_response(...)
+}
+
+async fn query(
+    _headers: Vec<(String, String)>,
+    qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    // Wildcard in the path will be set in the `qry`.
+    let city =  qry.get("city");
+
+    // send_response(...)
+}
+```
+
+This time, we don't need any arguments in the fn `handler` decorated by macro `request_handler`. Instead we should construct a [`Router`](https://docs.rs/webhook-flows/latest/webhook_flows/route/struct.Router.html), fill it with pairs of path and (Vec<>, [Handler](https://docs.rs/webhook-flows/latest/webhook_flows/route/fn.wrap_handler.html)), then call [`route`](https://docs.rs/webhook-flows/latest/webhook_flows/route/fn.route.html) on it. And In this circumstance, the handler fn would not receive the `subpath` argument.
+
 The whole document is [here](https://docs.rs/webhook-flows).

@@ -4,12 +4,11 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 
-pub use matchit::{MatchError, Router};
+pub use matchit::Router;
 
 type Handler = Box<
     dyn Fn(
         Vec<(String, String)>,
-        String,
         HashMap<String, Value>,
         Vec<u8>,
     ) -> Pin<Box<dyn Future<Output = ()>>>,
@@ -17,13 +16,13 @@ type Handler = Box<
 
 /// Helper for wrapping function to a Handler.
 /// Then the Handler should be inserted into [Router].
-pub fn new_handler<T>(
-    f: fn(Vec<(String, String)>, String, HashMap<String, Value>, Vec<u8>) -> T,
+pub fn wrap_handler<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
 ) -> Handler
 where
     T: Future<Output = ()> + 'static,
 {
-    Box::new(move |a, b, c, d| Box::pin(f(a, b, c, d)))
+    Box::new(move |a, b, c| Box::pin(f(a, b, c)))
 }
 
 extern "C" {
@@ -91,6 +90,12 @@ fn get_request() -> (
     }
 }
 
+/// Route error types
+pub enum RouteError {
+    NotFound,
+    MethodNotAllowed,
+}
+
 /// Route path to handler.
 /// For calling the exact handler, [construct the router](Router) then pass it to this function.
 /// ```rust
@@ -108,19 +113,19 @@ fn get_request() -> (
 ///     send_response(404, vec![], b"No route matched".to_vec())
 /// }
 /// ```
-pub async fn route(router: Router<(Vec<Method>, Handler)>) -> Result<(), MatchError> {
+pub async fn route(router: Router<(Vec<Method>, Handler)>) -> Result<(), RouteError> {
     let (method, headers, subpath, mut qry, body) = get_request();
-    let matched = router.at(subpath.as_str())?;
+    let matched = router.at(subpath.as_str()).or(Err(RouteError::NotFound))?;
     for p in matched.params.iter() {
         qry.insert(String::from(p.0), Value::from(p.1));
     }
     let (mv, f) = matched.value;
     for m in mv.iter() {
         if m.eq(&method) {
-            f(headers, subpath, qry, body).await;
+            f(headers, qry, body).await;
             return Ok(());
         }
     }
 
-    Err(MatchError::NotFound)
+    Err(RouteError::MethodNotAllowed)
 }
