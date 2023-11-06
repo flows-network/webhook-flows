@@ -14,15 +14,90 @@ type Handler = Box<
     ) -> Pin<Box<dyn Future<Output = ()>>>,
 >;
 
-/// Helper for wrapping function to a Handler.
-/// Then the Handler should be inserted into [Router].
-pub fn wrap_handler<T>(
+/// Helper for wrapping function to a Handler, and then binding to 'GET' method.
+pub fn get<T>(
     f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
-) -> Handler
+) -> (Method, Handler)
 where
     T: Future<Output = ()> + 'static,
 {
-    Box::new(move |a, b, c| Box::pin(f(a, b, c)))
+    (Method::GET, Box::new(move |a, b, c| Box::pin(f(a, b, c))))
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'OPTIONS' method.
+pub fn options<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (
+        Method::OPTIONS,
+        Box::new(move |a, b, c| Box::pin(f(a, b, c))),
+    )
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'POST' method.
+pub fn post<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (Method::POST, Box::new(move |a, b, c| Box::pin(f(a, b, c))))
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'PUT' method.
+pub fn put<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (Method::PUT, Box::new(move |a, b, c| Box::pin(f(a, b, c))))
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'DELETE' method.
+pub fn delete<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (
+        Method::DELETE,
+        Box::new(move |a, b, c| Box::pin(f(a, b, c))),
+    )
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'HEAD' method.
+pub fn head<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (Method::HEAD, Box::new(move |a, b, c| Box::pin(f(a, b, c))))
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'TRACE' method.
+pub fn trace<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (Method::TRACE, Box::new(move |a, b, c| Box::pin(f(a, b, c))))
+}
+
+/// Helper for wrapping function to a Handler, and then binding to 'PATCH' method.
+pub fn patch<T>(
+    f: fn(Vec<(String, String)>, HashMap<String, Value>, Vec<u8>) -> T,
+) -> (Method, Handler)
+where
+    T: Future<Output = ()> + 'static,
+{
+    (Method::PATCH, Box::new(move |a, b, c| Box::pin(f(a, b, c))))
 }
 
 extern "C" {
@@ -101,28 +176,28 @@ pub enum RouteError {
 /// ```rust
 /// let mut router = Router::new();
 /// router
-///     .insert("/options", (vec![Method::OPTIONS], new_handler(options)))
+///     .insert("/options", vec![options(opt)])
 ///     .unwrap();
 /// router
 ///     .insert(
 ///         "/get/:city",
-///         (vec![Method::GET], new_handler(handler)),
+///         vec![options(opt), get(query)],
 ///     )
 ///     .unwrap();
 /// if let Err(e) = route(router).await {
 ///     send_response(404, vec![], b"No route matched".to_vec())
 /// }
 /// ```
-pub async fn route(router: Router<(Vec<Method>, Handler)>) -> Result<(), RouteError> {
+pub async fn route(router: Router<Vec<(Method, Handler)>>) -> Result<(), RouteError> {
     let (method, headers, subpath, mut qry, body) = get_request();
     let matched = router.at(subpath.as_str()).or(Err(RouteError::NotFound))?;
     for p in matched.params.iter() {
         qry.insert(String::from(p.0), Value::from(p.1));
     }
-    let (mv, f) = matched.value;
-    for m in mv.iter() {
+    let mh = matched.value;
+    for (m, h) in mh.iter() {
         if m.eq(&method) {
-            f(headers, qry, body).await;
+            h(headers, qry, body).await;
             return Ok(());
         }
     }

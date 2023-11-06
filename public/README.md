@@ -42,21 +42,21 @@ There is a [`route`](https://docs.rs/webhook-flows/latest/webhook_flows/route/in
 ```rust
 use webhook_flows::{
     create_endpoint, request_handler,
-    route::{wrap_handler, route, RouteError, Router},
-    send_response, Method,
+    route::{get, options, route, RouteError, Router},
+    send_response,
 };
 
 #[request_handler]
 async fn handler() {
     let mut router = Router::new();
     router
-        .insert("/options", (vec![Method::OPTIONS], wrap_handler(options)))
+        .insert("/options", vec![options(opt)])
         .unwrap();
 
     router
         .insert(
             "/query/:city",
-            (vec![Method::GET, Method::POST], wrap_handler(query)),
+            vec![options(opt), get(query)],
         )
         .unwrap();
 
