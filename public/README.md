@@ -72,7 +72,7 @@ async fn handler() {
     }
 }
 
-async fn options(
+async fn opt(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
