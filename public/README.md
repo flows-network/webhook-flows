@@ -1,6 +1,6 @@
 This is an integration for making your flow function triggerable from webhooks in [flows.network](https://flows.network).
 
-## Usage example
+## Code example
 ```rust
 use webhook_flows::{create_endpoint, request_handler, send_response};
 
@@ -95,3 +95,9 @@ async fn query(
 This time, we don't need any arguments in the fn `handler` decorated by macro `request_handler`. Instead we should construct a [`Router`](https://docs.rs/webhook-flows/latest/webhook_flows/route/struct.Router.html), fill it with pairs of path and (Vec<>, [Handler](https://docs.rs/webhook-flows/latest/webhook_flows/route/fn.wrap_handler.html)), then call [`route`](https://docs.rs/webhook-flows/latest/webhook_flows/route/fn.route.html) on it. And In this circumstance, the handler fn would not receive the `subpath` argument.
 
 The whole document is [here](https://docs.rs/webhook-flows).
+
+
+## Deployment
+When your flow function has been deployed in Flows platform, you will see a section named `Webhook Endpoint` in your flow details. It will show a URL like `https://code.flows.network/webhook/***` which is the entry for your webhook service.
+
+You can also add one more `/async/` level in the URL to make the function acting as async service. In this case, the URL should be looked like this: `https://code.flows.network/webhook/async/***`. It must be noted that `webhook_flows::send_response` has no effect to your async http request, and it will always response with code `204`. In return you can make long running task in your function.
